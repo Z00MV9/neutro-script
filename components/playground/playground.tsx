@@ -61,13 +61,13 @@ export function PlayGround() {
                                 variant="ghost"
                                 size="icon"
                                 className="rounded-lg bg-muted"
-                                aria-label="Playground"
+                                aria-label="Neutro Script"
                             >
                                 <SquareTerminal className="size-5" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="right" sideOffset={5}>
-                            Playground
+                        Neutro Script
                         </TooltipContent>
                     </Tooltip>
                     <Tooltip>
@@ -169,7 +169,7 @@ export function PlayGround() {
             </aside>
             <div className="flex flex-col">
                 <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
-                    <h1 className="text-xl font-semibold">Playground</h1>
+                    <h1 className="text-xl font-semibold">Neutro Script</h1>
                     <Drawer>
                         <DrawerTrigger asChild>
                             <Button variant="ghost" size="icon" className="md:hidden">
