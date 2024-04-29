@@ -496,6 +496,15 @@ const PlayGround: React.FC = () => {
                             Output
                         </Badge>
                         <div className="flex-1" />
+                        {loading && <p>Loading...</p>}
+
+                        {result && (
+                            <div>
+                                <pre>{result}</pre>
+                                <p>Bias Score: {biasScore.toFixed(2)}</p>
+                                <p>Fairness Score: {fairnessScore.toFixed(2)}</p>
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
                             <Label htmlFor="message" className="sr-only">
                                 Message
@@ -534,15 +543,7 @@ const PlayGround: React.FC = () => {
                                 </Button>
                             </div>
                         </form>
-                        {loading && <p>Loading...</p>}
-
-                        {result && (
-                            <div>
-                                <pre>{result}</pre>
-                                <p>Bias Score: {biasScore.toFixed(2)}</p>
-                                <p>Fairness Score: {fairnessScore.toFixed(2)}</p>
-                            </div>
-                        )}
+                        
                     </div>
                 </main>
             </div>
