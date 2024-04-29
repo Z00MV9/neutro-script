@@ -1,3 +1,4 @@
+'use client'
 import {
     Bird,
     Book,
@@ -44,7 +45,88 @@ import {
     TooltipProvider
 } from "@/components/ui/tooltip"
 
-export function PlayGround() {
+import { checkBiasAndFairness } from '@/components/biasCheck/biasChecker';
+
+import React, { useState } from 'react';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI('AIzaSyBTcdxvGiyAN4tT3EJceBf3JMdnzt6gnbc');
+//configure({ apiKey: 'AIzaSyBTcdxvGiyAN4tT3EJceBf3JMdnzt6gnbc' });
+
+// Set up the model
+const generationConfig = {
+    temperature: 1,
+    topP: 0.95,
+    topK: 0,
+    maxOutputTokens: 8192,
+};
+
+const safetySettings = [
+    {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+];
+
+const systemInstruction = {
+    role: "model",
+    parts: [
+        {
+            "text": "You are a chat bot that produces an unbiased up to date latest news article on any given topic provided."
+        }
+    ]
+    //role:'You are a chat bot that produces an unbiased up to date latest news article on any given topic provided.'
+};
+
+const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-pro-latest',
+    safetySettings,
+    generationConfig,
+    systemInstruction,
+});
+
+const chat = model.startChat();
+
+
+
+
+async function NewsGenerator(topic: string): Promise<string> {
+    const result = await chat.sendMessage(topic);
+    const response = await result.response;
+    const text = response.text();
+    return text;
+}
+
+const PlayGround: React.FC = () => {
+    const [topic, setTopic] = useState('');
+    const [result, setResult] = useState('');
+    const [biasScore, setBiasScore] = useState(0);
+    const [fairnessScore, setFairnessScore] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const handleSubmit = async (e: React.FormEvent) => {
+        setLoading(true);
+        e.preventDefault();
+        const generatedArticle = await NewsGenerator(topic);
+        setResult(generatedArticle);
+        setLoading(false);
+        // Check for bias and fairness
+        const { biasScore, fairnessScore } = checkBiasAndFairness(generatedArticle);
+        setBiasScore(biasScore);
+        setFairnessScore(fairnessScore);
+    };
+
     return (
         <div className="grid h-screen w-full pl-[56px]">
             <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
@@ -55,115 +137,115 @@ export function PlayGround() {
                 </div>
                 <nav className="grid gap-1 p-2">
                     <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg bg-muted"
-                                aria-label="Neutro Script"
-                            >
-                                <SquareTerminal className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                        Neutro Script
-                        </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg"
-                                aria-label="Models"
-                            >
-                                <Bot className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            Models
-                        </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg"
-                                aria-label="API"
-                            >
-                                <Code2 className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            API
-                        </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg"
-                                aria-label="Documentation"
-                            >
-                                <Book className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            Documentation
-                        </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg"
-                                aria-label="Settings"
-                            >
-                                <Settings2 className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            Settings
-                        </TooltipContent>
-                    </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-lg bg-muted"
+                                    aria-label="Neutro Script"
+                                >
+                                    <SquareTerminal className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Neutro Script
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-lg"
+                                    aria-label="Models"
+                                >
+                                    <Bot className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Models
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-lg"
+                                    aria-label="API"
+                                >
+                                    <Code2 className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                API
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-lg"
+                                    aria-label="Documentation"
+                                >
+                                    <Book className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Documentation
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-lg"
+                                    aria-label="Settings"
+                                >
+                                    <Settings2 className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Settings
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
                 </nav>
                 <nav className="mt-auto grid gap-1 p-2">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="mt-auto rounded-lg"
-                                aria-label="Help"
-                            >
-                                <LifeBuoy className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            Help
-                        </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="mt-auto rounded-lg"
-                                aria-label="Account"
-                            >
-                                <SquareUser className="size-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                            Account
-                        </TooltipContent>
-                    </Tooltip>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="mt-auto rounded-lg"
+                                    aria-label="Help"
+                                >
+                                    <LifeBuoy className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Help
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="mt-auto rounded-lg"
+                                    aria-label="Account"
+                                >
+                                    <SquareUser className="size-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={5}>
+                                Account
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
                 </nav>
             </aside>
@@ -414,45 +496,59 @@ export function PlayGround() {
                             Output
                         </Badge>
                         <div className="flex-1" />
-                        <form className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
+                        <form onSubmit={handleSubmit} className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
                             <Label htmlFor="message" className="sr-only">
                                 Message
                             </Label>
                             <Textarea
                                 id="message"
-                                placeholder="Type your message here..."
+                                value={topic}
+                                onChange={(e) => setTopic(e.target.value)}
+                                placeholder="Give a topic to receive an unbiased news article"
                                 className="min-h-12 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
                             />
                             <div className="flex items-center p-3 pt-0">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <Paperclip className="size-4" />
-                                            <span className="sr-only">Attach file</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Attach File</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <Mic className="size-4" />
-                                            <span className="sr-only">Use Microphone</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Use Microphone</TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <Paperclip className="size-4" />
+                                                <span className="sr-only">Attach file</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Attach File</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <Mic className="size-4" />
+                                                <span className="sr-only">Use Microphone</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Use Microphone</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <Button type="submit" size="sm" className="ml-auto gap-1.5">
-                                    Send Message
+                                    {loading ? 'Generating...' : 'Generate Article'}
                                     <CornerDownLeft className="size-3.5" />
                                 </Button>
                             </div>
                         </form>
+                        {loading && <p>Loading...</p>}
+
+                        {result && (
+                            <div>
+                                <pre>{result}</pre>
+                                <p>Bias Score: {biasScore.toFixed(2)}</p>
+                                <p>Fairness Score: {fairnessScore.toFixed(2)}</p>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>
         </div>
     )
 }
+
+
+export default PlayGround;
